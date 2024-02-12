@@ -2,7 +2,7 @@
   "name": "Clipboard Master",
   "version": "1.0.0",
   "manifest_version": 3,
-  "permissions": ["storage"],
+  "permissions": ["tabs", "scripting", "activeTab", "clipboardRead", "clipboardWrite", "storage"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

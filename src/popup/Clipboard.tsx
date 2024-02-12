@@ -1,27 +1,33 @@
+import { useEffect } from "react";
 import { Trash2, Copy } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 
 const Clipboard = () => {
-  const [copiedText, setCopiedText] = useState<any[]>([]);
-
-  const getCopiedText = useCallback(async () => {
-    if (!document.hasFocus()) {
-      return console.error("Document is not focused.");
-    }
-
-    try {
-      const text = await navigator.clipboard.readText();
-      setCopiedText((prev) => [...prev, text]);
-    } catch (error) {
-      console.error("Error in getting copied text", error);
-    }
-  }, []);
-
   useEffect(() => {
-    getCopiedText();
-  }, []);
+    const chromeVar = chrome;
 
-  console.log(copiedText);
+    chromeVar.runtime.onMessage.addListener(async (message) => {
+      if (message.action === "copiedTextResponse") {
+        console.log("Copied Text:", message.copiedText);
+      }
+      return true; // Indicate asynchronous handling
+    });
+
+    async function sendMessageToContentScript() {
+      const activeTab = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tabId = activeTab[0]?.id || 0;
+
+      try {
+        const response = await chrome.tabs.sendMessage(tabId, { message: "getCopiedText" });
+        console.log("Response from content script:", response);
+      } catch (error) {
+        console.error("Error sending message to content script:", error);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      sendMessageToContentScript();
+    });
+  }, []);
 
   return (
     <>

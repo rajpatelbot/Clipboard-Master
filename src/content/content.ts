@@ -1,73 +1,24 @@
-// /*global chrome*/
+const chromeVar = chrome;
 
-// function getColors() {
-//   const body = document.querySelector("body");
-//   let colors: string[] = [];
-//   function isValidHex(value: string) {
-//     return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value);
-//   }
+async function getCopiedText() {
+  try {
+    // const activeTab = await chrome.tabs.query({ active: true, currentWindow: true });
+    const text = await navigator.clipboard.readText();
 
-//   function isValidRGBA(value: string) {
-//     return /rgba\((\d{1,3}), ?(\d{1,3}), ?(\d{1,3}), ?(\d{1,3})\)/.test(value);
-//   }
+    const response = await chrome.runtime.sendMessage({
+      action: "copiedTextResponse",
+      copiedText: text,
+    });
 
-//   function replaceAnythingOtherThanRGBAWithEmpty(value: string) {
-//     return value.replace(
-//       /rgba\((\d{1,3}), ?(\d{1,3}), ?(\d{1,3}), ?(\d{1,3})\)/,
-//       ""
-//     );
-//   }
+    console.log("Response from popup:", response);
+  } catch (error) {
+    console.error("Error in getting copied text:", error);
+  }
+}
 
-//   function getCSSFromNode(item: HTMLElement) {
-//     if (item.tagName) {
-//       const allCss = getComputedStyle(item);
-//       const colorsForElem = [allCss.color, allCss.backgroundColor];
-//       if (isValidHex(allCss.background)) {
-//         colors.push(allCss.background);
-//       } else if (isValidRGBA(allCss.background)) {
-//         colors.push(replaceAnythingOtherThanRGBAWithEmpty(allCss.color));
-//       }
-//       if (colorsForElem.length) {
-//         colors.push(...colorsForElem);
-//       }
-//     }
-//   }
-
-//   function getAllContent(childNodes: NodeListOf<ChildNode>) {
-//     for (let i = 0; i < childNodes.length; i++) {
-//       const item = childNodes[i];
-//       if (item.childNodes.length) {
-//         getCSSFromNode(item as HTMLElement);
-//         getAllContent(item.childNodes);
-//       } else {
-//         getCSSFromNode(item as HTMLElement);
-//       }
-//     }
-//   }
-
-//   function makeArrayUnique(array: string[]) {
-//     return [...new Set(array)].filter((item) => item);
-//   }
-
-//   if (body) {
-//     getAllContent(body.childNodes);
-//     const uniqueColors = makeArrayUnique(colors);
-//     (async function () {
-//       // @ts-ignore
-//       const chromeVar = chrome;
-//       chromeVar.runtime.sendMessage({
-//         action: "gotColors",
-//         colors: uniqueColors,
-//       });
-//     })();
-//   }
-// }
-
-// // @ts-ignore
-// const chromeVar = chrome;
-
-// chromeVar.runtime.onMessage.addListener(function (message: any) {
-//   if (message.action === "getColors") {
-//     getColors();
-//   }
-// });
+chrome.runtime.onMessage.addListener(async (request) => {
+  if (request.message === "getCopiedText") {
+    await getCopiedText();
+  }
+  return true; // Indicate asynchronous handling
+});
